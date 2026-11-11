@@ -35,6 +35,10 @@ candidate → due_diligence → pending_review → multisig_approved → paid_ex
 
 `ecosystem_sdk.py` ينتج أوصاف طلبات قراءة فقط لإحصائيات المشروع. لا يرسل الطلبات ولا يمنح المشروع وصولًا إلى الأصول أو الأسرار.
 
+## FOX AI Studio Gateway
+
+يحتوي `gateway_contract.py` على عقد التحقق المشترك لواجهة FOX Studio العامة: مسارات محددة، توقيع HMAC قصير العمر، ومحدد معدل لكل عميل. تفاصيل الحدود الأمنية في `GATEWAY_SECURITY.md`، مع اختبارات `test_gateway_contract.py`. لا يحتوي هذا العقد على مفاتيح توقيع أو منطق تحويل أموال أو استدعاءات مباشرة للنظام على سلسلة الكتل.
+
 ## التشغيل
 
 ```bash
