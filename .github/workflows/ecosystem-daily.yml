@@ -1,0 +1,49 @@
+name: Ecosystem discovery and grant review
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "17 2 * * *"
+
+permissions:
+  contents: read
+
+jobs:
+  quality:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: python -m unittest -v
+      - run: python -m pip install bandit==1.7.10 ruff==0.8.4
+      - run: ruff check .
+      - run: bandit -r . -x ./.git
+
+  discovery:
+    needs: quality
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Scan public GitHub projects
+        env:
+          GITHUB_READ_TOKEN: ${{ secrets.GITHUB_READ_TOKEN }}
+          RESULTS_PER_QUERY: "10"
+          TRENDING_OUTPUT: reports/trending.json
+        run: python trending_scanner.py
+      - name: Create grant proposal only
+        env:
+          GRANT_AMOUNT_USD: ${{ vars.GRANT_AMOUNT_USD }}
+          GRANT_PROJECT_FILE: grant.example.json
+          GRANT_OUTPUT: reports/grant-proposal.json
+        run: python grants_manager.py
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ecosystem-review-${{ github.run_number }}
+          path: reports/
+          if-no-files-found: error
+          retention-days: 14
