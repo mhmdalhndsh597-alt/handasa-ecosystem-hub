@@ -21,8 +21,12 @@ def build_grant(project: dict, amount_usd: Decimal, milestones: list[str]) -> di
 
 def main() -> int:
     try:
+        raw_amount = os.environ.get("GRANT_AMOUNT_USD", "").strip()
+        if not raw_amount:
+            print("Grant proposal skipped: GRANT_AMOUNT_USD is not configured; no amount was assumed.")
+            return 0
         project = json.loads(Path(os.environ.get("GRANT_PROJECT_FILE", "grant.example.json")).read_text())
-        proposal = build_grant(project, Decimal(os.environ.get("GRANT_AMOUNT_USD", "0")), ["technical due diligence", "public milestone report", "security review"])
+        proposal = build_grant(project, Decimal(raw_amount), ["technical due diligence", "public milestone report", "security review"])
         output = Path(os.environ.get("GRANT_OUTPUT", "reports/grant-proposal.json"))
         output.parent.mkdir(parents=True, exist_ok=True)
         output.write_text(json.dumps(proposal, indent=2, ensure_ascii=False) + "\n")
