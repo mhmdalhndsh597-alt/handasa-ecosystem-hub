@@ -1,8 +1,11 @@
 import unittest
 from decimal import Decimal
+from pathlib import Path
+from tempfile import TemporaryDirectory
+from unittest.mock import patch
 
 from ecosystem_sdk import EcosystemClient
-from grants_manager import build_configuration_notice, build_grant
+from grants_manager import build_grant, main
 
 
 class EcosystemTests(unittest.TestCase):
@@ -23,12 +26,12 @@ class EcosystemTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             build_grant({}, Decimal("0"), ["audit"])
 
-    def test_missing_amount_is_non_funding_configuration_notice(self):
-        notice = build_configuration_notice({"full_name": "x/y"})
-        self.assertEqual(notice["status"], "awaiting_configuration")
-        self.assertIsNone(notice["amount_usd"])
-        self.assertFalse(notice["payout_enabled"])
-        self.assertTrue(notice["requires_multisig_approval"])
+    def test_missing_grant_amount_skips_without_creating_proposal(self):
+        with TemporaryDirectory() as temp_dir:
+            output = Path(temp_dir) / "proposal.json"
+            with patch.dict("os.environ", {"GRANT_AMOUNT_USD": "", "GRANT_OUTPUT": str(output)}):
+                self.assertEqual(main(), 0)
+            self.assertFalse(output.exists())
 
 
 if __name__ == "__main__":
