@@ -2,7 +2,7 @@ import unittest
 from decimal import Decimal
 
 from ecosystem_sdk import EcosystemClient
-from grants_manager import build_grant
+from grants_manager import build_configuration_notice, build_grant
 
 
 class EcosystemTests(unittest.TestCase):
@@ -22,6 +22,13 @@ class EcosystemTests(unittest.TestCase):
     def test_grant_rejects_zero(self):
         with self.assertRaises(ValueError):
             build_grant({}, Decimal("0"), ["audit"])
+
+    def test_missing_amount_is_non_funding_configuration_notice(self):
+        notice = build_configuration_notice({"full_name": "x/y"})
+        self.assertEqual(notice["status"], "awaiting_configuration")
+        self.assertIsNone(notice["amount_usd"])
+        self.assertFalse(notice["payout_enabled"])
+        self.assertTrue(notice["requires_multisig_approval"])
 
 
 if __name__ == "__main__":
